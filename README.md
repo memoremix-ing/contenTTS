@@ -70,14 +70,18 @@ takes these alone, for apps that make their own controls.
 | `root` | `document.body` | What to read. |
 | `lang` | the nearest `lang` attribute, else the browser's | The text's language, as in `en-US`. Picks the voice and splits sentences. |
 | `skip` | none | A selector for more to leave unread. |
+| `paragraph` | none | `(element) => value`: groups text into paragraphs other than by layout. Text whose elements give the same value is read as one paragraph, its parts joined with spaces; `undefined` goes by layout. For text the page breaks into lines that should read as prose, such as a diff of a Markdown file. |
 | `storage` | `localStorage`, key `read-aloud` | `{ load(), save(value) }` for the voice and speed, or `null` to keep them only while the page is open. |
 | `follow` | `true` | Scroll to what is being read. Scrolling by hand holds the page for a few seconds. |
 | `engine` | `new WebSpeech()` | Where speech comes from (see below). |
 
 ### The reader
 
-`reader.start({ from })` (a Range or Node; optional), `pause()`, `resume()`,
-`toggle()`, `next()`, `previous()`, `stop()`, `destroy()`.
+`reader.start({ from, within })`, `pause()`, `resume()`, `toggle()`,
+`next()`, `previous()`, `stop()`, `destroy()`. `start` reads from `from` (a
+Range or Node) if given, else from the selection, else from the first
+sentence on screen: within `within` (an element, such as the pane last
+used) if given and it has any, else anywhere under `root`.
 
 `reader.state` is `"idle"`, `"starting"`, `"speaking"` or `"paused"`;
 `reader.error` says why reading last stopped short, if it did. `reader.rate`
@@ -90,9 +94,10 @@ voices do.
 
 ### The controls
 
-`<read-aloud-controls>`, given a reader as its `reader` property. It sits at
-the foot of the window while reading. Add `placement="inline"` to lay it out
-where it is put instead, or `persistent` to always show it.
+`<read-aloud-controls>`, given a reader as its `reader` property. It shows
+while reading, floating at the foot of the window. Add `placement="inline"`
+to have it sit where it is put instead, without a frame, as in a toolbar,
+and `persistent` to show it always.
 
 The voice picker lists the voices for a language (English by default, for an
 English page), best first, grouped Premium, Enhanced, Standard, Basic and

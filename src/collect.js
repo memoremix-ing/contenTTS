@@ -16,12 +16,41 @@ const SKIP_SELECTOR = '[hidden], [inert], [aria-hidden="true"], [data-read-aloud
  * lays out as a block (a paragraph, a list item, a table cell…):
  * `[{ text, pieces, sentences }]`. `pieces` maps the block's text back to
  * text nodes (see `pointAt` in text.js); `sentences` are offsets into `text`.
+ *
+ * `paragraph(element)`, if given, can group text otherwise: for the element
+ * holding some text, it returns a value naming the paragraph that text
+ * belongs to, or `undefined` to go by the layout. Text given the same value
+ * is read as one block, where its first part is, even if other text comes
+ * between (as with the two sides of a side-by-side diff). Parts the page lays
+ * out apart, such as lines, are joined with a space.
  */
-export function collect(root, { lang, skip } = {}) {
+export function collect(root, { lang, skip, paragraph } = {}) {
   const selector = skip ? `${SKIP_SELECTOR}, ${skip}` : SKIP_SELECTOR;
-  const blockOf = blockFinder(root);
+  const layoutOf = blockFinder(root);
+  const named = new Map();
   const blocks = [];
   let block = null;
+  const blockFor = (element) => {
+    const layout = layoutOf(element);
+    const name = paragraph?.(element);
+    let found = block;
+    if (name === undefined) {
+      if (!found || found.owner !== layout) found = null;
+    } else {
+      found = named.get(name) || null;
+    }
+    if (!found) {
+      found = { owner: name === undefined ? layout : null, layout, text: "", pieces: [] };
+      if (name !== undefined) named.set(name, found);
+      blocks.push(found);
+    } else if (found.layout !== layout) {
+      // Laid out apart, as lines are: a break between them, not a run-on word.
+      found.layout = layout;
+      found.pieces.push({ node: null, start: found.text.length, length: 1 });
+      found.text += " ";
+    }
+    return found;
+  };
 
   const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
@@ -32,11 +61,7 @@ export function collect(root, { lang, skip } = {}) {
   });
 
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-    const owner = blockOf(node.nodeType === Node.TEXT_NODE ? node.parentElement : node);
-    if (!block || block.owner !== owner) {
-      block = { owner, text: "", pieces: [] };
-      blocks.push(block);
-    }
+    block = blockFor(node.nodeType === Node.TEXT_NODE ? node.parentElement : node);
     if (node.nodeType === Node.TEXT_NODE) {
       block.pieces.push({ node, start: block.text.length, length: node.data.length });
       // Same length, so offsets still line up with the node: new lines and
@@ -91,6 +116,26 @@ export function rangeOf(block, start, end) {
   range.setStart(from.node, from.offset);
   range.setEnd(to.node, to.offset);
   return range;
+}
+
+/**
+ * What to paint for offsets `[start, end)` of a block: a range for each text
+ * node's part, so that what lies between them and is not read (line numbers
+ * beside a diff's lines, say) is not painted either. Empty if the nodes have gone.
+ */
+export function rangesOf(block, start, end) {
+  const ranges = [];
+  for (const piece of block.pieces) {
+    const from = Math.max(start, piece.start);
+    const to = Math.min(end, piece.start + piece.length);
+    if (!piece.node || from >= to) continue;
+    if (!piece.node.isConnected) return [];
+    const range = piece.node.ownerDocument.createRange();
+    range.setStart(piece.node, from - piece.start);
+    range.setEnd(piece.node, to - piece.start);
+    ranges.push(range);
+  }
+  return ranges;
 }
 
 /** Whether a block still reads as it did when collected: all its nodes on the page, with the same text. */

@@ -1,9 +1,9 @@
 // <read-aloud-controls>: play and pause, skipping by sentence, speed, and a
 // voice picker, for a ReadAloud given as its `reader` property.
 //
-// It sits fixed at the foot of the window and shows itself while reading,
-// unless it has `placement="inline"` (laid out where the app puts it) or
-// `persistent` (always shown).
+// It shows itself while reading, or always with `persistent`. It floats at
+// the foot of the window, or with `placement="inline"` sits where the app
+// puts it, as in a toolbar, without a frame of its own.
 
 import { couldBeBetter, groups, label, language, languages } from "./voices.js";
 
@@ -25,7 +25,10 @@ const BETTER_VOICES = {
 
 const STYLE = `
 :host { position: fixed; z-index: 2147483000; inset: auto 0 16px 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 24px); color-scheme: light dark; font: 13px/1.3 system-ui, sans-serif; }
-:host([placement="inline"]) { position: static; margin: 0; }
+:host([placement="inline"]) { position: static; margin: 0; max-width: none; font: inherit; }
+:host([placement="inline"]) .bar { padding: 0; border: 0; background: none; box-shadow: none; flex-wrap: nowrap; }
+:host([placement="inline"]) details { position: relative; flex-basis: auto; white-space: nowrap; }
+:host([placement="inline"]) details p { position: absolute; right: 0; bottom: calc(100% + 8px); width: 30em; margin: 0; padding: 8px 10px; white-space: normal; background: Canvas; color: CanvasText; border: 1px solid color-mix(in srgb, CanvasText 18%, transparent); border-radius: 8px; box-shadow: 0 6px 24px rgb(0 0 0 / 0.18); }
 :host([hidden]) { display: none; }
 .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 12px; background: Canvas; color: CanvasText; border: 1px solid color-mix(in srgb, CanvasText 18%, transparent); box-shadow: 0 6px 24px rgb(0 0 0 / 0.18); }
 button { display: inline-grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: inherit; cursor: pointer; }
@@ -226,7 +229,7 @@ export class ReadAloudControls extends HTMLElement {
     const voice = reader?.voice;
     if (voice && [...parts.voice.options].some((option) => option.value === voice.voiceURI)) parts.voice.value = voice.voiceURI;
 
-    this.hidden = !this.hasAttribute("persistent") && this.getAttribute("placement") !== "inline" && (this.#dismissed || (state === "idle" && !error));
+    this.hidden = !this.hasAttribute("persistent") && (this.#dismissed || (state === "idle" && !error));
   }
 }
 

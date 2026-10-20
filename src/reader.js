@@ -1,7 +1,7 @@
 // Reading a page aloud: which sentence is being read, highlighting it and its
 // words as they are spoken, and keeping them on screen.
 
-import { collect, intact, rangeOf } from "./collect.js";
+import { collect, intact, rangeOf, rangesOf } from "./collect.js";
 import { WebSpeech } from "./speech.js";
 import { choose, language } from "./voices.js";
 
@@ -77,7 +77,8 @@ function addStyles(document) {
  *
  * Options: `root` (default `document.body`); `lang`, the text's language
  * (default: the nearest `lang` attribute, else the browser's); `skip`, a
- * selector for more to leave unread; `engine` (default `WebSpeech`);
+ * selector for more to leave unread; `paragraph`, to group text into
+ * paragraphs other than by layout (see `collect`); `engine` (default `WebSpeech`);
  * `storage`, `{ load(), save(value) }` for the voice and speed, or `null` to
  * keep them for the page's life only; `follow`, whether to scroll to what is
  * being read (default true).
@@ -94,6 +95,7 @@ export class ReadAloud extends EventTarget {
   #root;
   #lang;
   #skip;
+  #paragraph;
   #engine;
   #store;
   #follow;
@@ -107,11 +109,12 @@ export class ReadAloud extends EventTarget {
   #heldUntil = 0;
   #listeners = [];
 
-  constructor({ root = document.body, lang, skip, engine = new WebSpeech(), storage = localStore("read-aloud"), follow = true } = {}) {
+  constructor({ root = document.body, lang, skip, paragraph, engine = new WebSpeech(), storage = localStore("read-aloud"), follow = true } = {}) {
     super();
     this.#root = root;
     this.#lang = lang || root.closest("[lang]")?.lang || navigator.language || "en";
     this.#skip = skip;
+    this.#paragraph = paragraph;
     this.#engine = engine;
     this.#store = storage;
     this.#follow = follow;
@@ -203,15 +206,16 @@ export class ReadAloud extends EventTarget {
   /**
    * Starts reading: from `from` (a Range or Node) if given, else from the
    * selection if there is one under the root, else from the first sentence
-   * on screen.
+   * on screen. Given `within` (an element, such as the pane last used), the
+   * first sentence on screen is looked for there first.
    */
-  start({ from } = {}) {
+  start({ from, within } = {}) {
     this.stop();
     this.error = null;
     if (!this.#engine.available) return this.#end("unavailable");
     this.#sentences = this.#gather();
     if (!this.#sentences.length) return this.#end("empty");
-    this.#play(this.#locate(from));
+    this.#play(this.#locate(from, within));
   }
 
   pause() {
@@ -258,12 +262,12 @@ export class ReadAloud extends EventTarget {
   }
 
   #gather() {
-    return collect(this.#root, { lang: this.#lang, skip: this.#skip }).flatMap((block) =>
+    return collect(this.#root, { lang: this.#lang, skip: this.#skip, paragraph: this.#paragraph }).flatMap((block) =>
       block.sentences.map(({ start, end }) => ({ block, start, end })),
     );
   }
 
-  #locate(from) {
+  #locate(from, within) {
     let point = null;
     if (from instanceof Range) point = from;
     else if (from instanceof Node) {
@@ -274,19 +278,35 @@ export class ReadAloud extends EventTarget {
       const range = selection?.rangeCount && !selection.isCollapsed ? selection.getRangeAt(0) : null;
       if (range && this.#root.contains(range.startContainer)) point = range;
     }
+    if (point) {
+      for (const [i, { block, start, end }] of this.#sentences.entries()) {
+        // The first sentence that does not end before the point.
+        if (rangeOf(block, start, end)?.comparePoint(point.startContainer, point.startOffset) <= 0) return i;
+      }
+      return 0;
+    }
+    if (within?.isConnected) {
+      const found = this.#onScreen(within);
+      if (found >= 0) return found;
+    }
+    return Math.max(0, this.#onScreen(null));
+  }
+
+  /** The first sentence on screen (within `area`, if given, and its box), else the first in `area`; -1 if none. */
+  #onScreen(area) {
     const view = this.#root.ownerDocument.defaultView;
+    const box = area?.getBoundingClientRect();
+    const top = Math.max(0, box?.top ?? 0);
+    const bottom = Math.min(view.innerHeight, box?.bottom ?? view.innerHeight);
+    let first = -1;
     for (const [i, { block, start, end }] of this.#sentences.entries()) {
       const range = rangeOf(block, start, end);
-      if (!range) continue;
-      if (point) {
-        // The first sentence that does not end before the point.
-        if (range.comparePoint(point.startContainer, point.startOffset) <= 0) return i;
-      } else {
-        const rect = range.getBoundingClientRect();
-        if ((rect.width || rect.height) && rect.bottom > 0 && rect.top < view.innerHeight) return i;
-      }
+      if (!range || (area && !area.contains(range.startContainer))) continue;
+      if (first < 0) first = i;
+      const rect = range.getBoundingClientRect();
+      if ((rect.width || rect.height) && rect.bottom > top && rect.top < bottom) return i;
     }
-    return 0;
+    return first;
   }
 
   #wordOffset() {
@@ -354,17 +374,17 @@ export class ReadAloud extends EventTarget {
     if (typeof CSS === "undefined" || !CSS.highlights || typeof Highlight !== "function") return;
     if (!word) {
       CSS.highlights.delete(WORD);
-      const range = rangeOf(sentence.block, sentence.start, sentence.end);
-      if (!range) return void CSS.highlights.delete(SENTENCE);
-      CSS.highlights.set(SENTENCE, new Highlight(range));
-      return this.#reveal(range);
+      const ranges = rangesOf(sentence.block, sentence.start, sentence.end);
+      if (!ranges.length) return void CSS.highlights.delete(SENTENCE);
+      CSS.highlights.set(SENTENCE, new Highlight(...ranges));
+      return this.#reveal(ranges[0]);
     }
-    const range = rangeOf(sentence.block, word.start, word.end);
-    if (!range) return void CSS.highlights.delete(WORD);
-    const highlight = new Highlight(range);
+    const ranges = rangesOf(sentence.block, word.start, word.end);
+    if (!ranges.length) return void CSS.highlights.delete(WORD);
+    const highlight = new Highlight(...ranges);
     highlight.priority = 1;
     CSS.highlights.set(WORD, highlight);
-    this.#reveal(range);
+    this.#reveal(ranges[0]);
   }
 
   /** Scrolls what is being read to a third of the way down its scroller, if it is near an edge or out of sight. */
