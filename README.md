@@ -22,7 +22,9 @@ const { reader } = mountReadAloud({ root: document.querySelector("main") });
 That adds the controls, which appear while reading, and Edge's shortcut:
 ⌘⇧U on a Mac, Ctrl+Shift+U elsewhere. Give the app a way in too, such as a
 button or a menu item calling `reader.toggle()`. Reading starts from the
-selection if there is one, else from the first sentence on screen.
+selection if there is one, else from the first sentence on screen. To move
+reading elsewhere while it goes on, select some text and press the controls'
+Read from selection button.
 
 Pages without a bundler can load the files as they are. In an Electrobun app,
 copy `src/` in with the page; nothing else is needed, and it works under a
@@ -81,7 +83,9 @@ takes these alone, for apps that make their own controls.
 `next()`, `previous()`, `stop()`, `destroy()`. `start` reads from `from` (a
 Range or Node) if given, else from the selection, else from the first
 sentence on screen: within `within` (an element, such as the pane last
-used) if given and it has any, else anywhere under `root`.
+used) if given and it has any, else anywhere under `root`. Starting while
+reading moves reading there. `reader.selection` is the text selected under
+`root`, as a Range, or `null`.
 
 `reader.state` is `"idle"`, `"starting"`, `"speaking"` or `"paused"`;
 `reader.error` says why reading last stopped short, if it did. `reader.rate`
@@ -97,7 +101,9 @@ voices do.
 `<read-aloud-controls>`, given a reader as its `reader` property. It shows
 while reading, floating at the foot of the window. Add `placement="inline"`
 to have it sit where it is put instead, without a frame, as in a toolbar,
-and `persistent` to show it always.
+and `persistent` to show it always. Its Read from selection button moves
+reading to the selected text; it listens to the page only for
+`selectionchange`, and leaves the selection as it was.
 
 The voice picker lists the voices for a language (English by default, for an
 English page), best first, grouped Premium, Enhanced, Standard, Basic and
