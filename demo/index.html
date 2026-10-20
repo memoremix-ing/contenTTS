@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- As strict as projj's page, and stricter about style: nothing inline. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>read-aloud demo</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<header>
+  <button type="button" id="read">Read aloud</button>
+  <span class="tip">or press <kbd>⌘⇧U</kbd> (<kbd>Ctrl+Shift+U</kbd>). Select text first to start there.</span>
+</header>
+
+<div class="page">
+<main>
+  <h1>Reading a page aloud</h1>
+  <p>Edge's Read Aloud reads a page to you, <strong>highlighting each word</strong> as it is spoken, and keeps the sentence being read on screen. This page tries the same in any webview, with the voices the system already has.</p>
+  <p>Ask Dr. Moore, e.g. by mail, whether the Premium voices are worth the download. They are free, and they sound far better than the voices a Mac starts with.</p>
+
+  <h2>What gets read</h2>
+  <ul>
+    <li>Paragraphs, headings, and list items, each on its own.</li>
+    <li>Text inside <a href="#links">links</a>, <em>emphasis</em> and <code>inline code</code>, read straight through.</li>
+    <li>Table cells, one after another.</li>
+  </ul>
+  <table>
+    <tr><th>Voice</th><th>Sounds</th></tr>
+    <tr><td>Ava (Premium)</td><td>Natural, and close to Edge's online voices.</td></tr>
+    <tr><td>Samantha</td><td>Clear, but plainly a machine.</td></tr>
+  </table>
+
+  <h2>What does not</h2>
+  <p>Anything hidden<span hidden> (like this text, which must never be read)</span>, anything marked <span aria-hidden="true">decorative and </span>with aria-hidden, and anything an app opts out.</p>
+  <p class="hidden-by-css">This paragraph is hidden by a style sheet and must not be read either.</p>
+  <pre><code>// Code blocks are read like any other text, cut into
+// pieces short enough to pause and skip quickly.
+const { reader } = mountReadAloud({ root: document.querySelector("main") });</code></pre>
+
+  <h2>Scrolling along</h2>
+  <div class="scroller">
+    <p>This box scrolls on its own, inside the page. While it is read, the sentence being read is kept in view within the box.</p>
+    <p>Scroll by hand while reading, and the reader leaves the page where you put it for a few seconds before following along again.</p>
+    <p>Changing the speed or the voice starts again from the word being spoken, so nothing is missed and nothing is repeated twice.</p>
+    <p>Pausing holds the place. Skipping moves a whole sentence at a time, forward or back.</p>
+    <p>That is the end of the box.</p>
+  </div>
+  <p>And that is the end of the page.</p>
+</main>
+
+<aside data-read-aloud="skip">
+  <h2>Sidebar</h2>
+  <p>This sidebar is marked data-read-aloud="skip", so it is never read.</p>
+</aside>
+</div>
+
+<script type="module" src="demo.js"></script>
+</body>
+</html>

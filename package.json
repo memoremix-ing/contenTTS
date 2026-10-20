@@ -1,0 +1,17 @@
+{
+  "name": "read-aloud",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Edge-style Read Aloud for pages in webviews: sentence and word highlighting, with the system's voices.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/read-aloud.js",
+    "./voices": "./src/voices.js",
+    "./text": "./src/text.js"
+  },
+  "files": ["src"],
+  "scripts": {
+    "test": "node --test"
+  }
+}
