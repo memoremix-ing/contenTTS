@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- As strict as projj's page, and stricter about style: nothing inline. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
-<title>read-aloud demo</title>
+<title>voice-overlay demo</title>
 <link rel="stylesheet" href="demo.css">
 </head>
 <body>
@@ -37,7 +37,7 @@
   <p class="hidden-by-css">This paragraph is hidden by a style sheet and must not be read either.</p>
   <pre><code>// Code blocks are read like any other text, cut into
 // pieces short enough to pause and skip quickly.
-const { reader } = mountReadAloud({ root: document.querySelector("main") });</code></pre>
+const { reader } = mountVoiceOverlay({ root: document.querySelector("main") });</code></pre>
 
   <h2>Scrolling along</h2>
   <div class="scroller">
@@ -50,9 +50,9 @@ const { reader } = mountReadAloud({ root: document.querySelector("main") });</co
   <p>And that is the end of the page.</p>
 </main>
 
-<aside data-read-aloud="skip">
+<aside data-voice-overlay="skip">
   <h2>Sidebar</h2>
-  <p>This sidebar is marked data-read-aloud="skip", so it is never read.</p>
+  <p>This sidebar is marked data-voice-overlay="skip", so it is never read.</p>
 </aside>
 </div>
 

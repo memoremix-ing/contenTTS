@@ -1,6 +1,6 @@
-import { mountReadAloud } from "../src/read-aloud.js";
+import { mountVoiceOverlay } from "../src/voice-overlay.js";
 
-const { reader } = mountReadAloud({ root: document.querySelector("main") });
+const { reader } = mountVoiceOverlay({ root: document.querySelector("main") });
 
 const button = document.querySelector("#read");
 button.addEventListener("click", () => reader.toggle());

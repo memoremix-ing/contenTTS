@@ -1,4 +1,4 @@
-# read-aloud
+# voice-overlay
 
 ## Repository workflow
 

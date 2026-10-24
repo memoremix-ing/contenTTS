@@ -1,12 +1,12 @@
 {
-  "name": "read-aloud",
+  "name": "voice-overlay",
   "version": "0.1.0",
   "private": true,
-  "description": "Edge-style Read Aloud for pages in webviews: sentence and word highlighting, with the system's voices.",
+  "description": "Reads pages in webviews aloud, highlighting each sentence and word, with the system's voices. Heavily inspired by Read Aloud in Microsoft Edge.",
   "license": "Apache-2.0",
   "type": "module",
   "exports": {
-    ".": "./src/read-aloud.js",
+    ".": "./src/voice-overlay.js",
     "./voices": "./src/voices.js",
     "./text": "./src/text.js"
   },
