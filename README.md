@@ -1,6 +1,6 @@
-# voice-overlay
+# ContenTTS
 
-voice-overlay reads pages in webviews to you: it highlights each sentence
+ContenTTS reads pages in webviews to you: it highlights each sentence
 and the word being spoken, keeps them on screen, and lets you pause, skip by
 sentence, change the speed, and pick a voice. It is heavily inspired by Read
 Aloud in Microsoft's Edge web browser, whose shortcut it borrows too. It is
@@ -16,9 +16,9 @@ the voices are as good as the system's: on a Mac, download a Premium voice
 ## Use
 
 ```js
-import { mountVoiceOverlay } from "voice-overlay";
+import { mountContenTTS } from "contentts";
 
-const { reader } = mountVoiceOverlay({ root: document.querySelector("main") });
+const { reader } = mountContenTTS({ root: document.querySelector("main") });
 ```
 
 That adds the controls, which appear while reading, and Edge's shortcut:
@@ -35,27 +35,27 @@ only from inside the project, so link it in first, as projj does with its
 `web` folder:
 
 ```sh
-ln -s ../../voice-overlay.git/sts-0/src voice-overlay   # in an app at track/<host>/<tenant>/<app>.git/sts-0/
+ln -s ../../contentts.git/sts-0/src contentts   # in an app at track/<host>/<tenant>/<app>.git/sts-0/
 ```
 
 ```ts
 // electrobun.config.ts
 build: {
   copy: {
-    "voice-overlay": "views/app/voice-overlay",
+    "contentts": "views/app/contentts",
   },
 },
 ```
 
 ```js
-import { mountVoiceOverlay } from "/voice-overlay/voice-overlay.js";
+import { mountContenTTS } from "/contentts/contentts.js";
 ```
 
 ### What is read
 
 Everything under `root` the page shows, except form controls, buttons,
 code that is not text (`script`, `style`, `svg`…), and anything hidden,
-`inert`, `aria-hidden="true"`, or marked `data-voice-overlay="skip"`. Pass
+`inert`, `aria-hidden="true"`, or marked `data-contentts="skip"`. Pass
 `skip: "selector"` to leave out more. Each block (a paragraph, a list item, a
 table cell) is read on its own, sentence by sentence.
 
@@ -65,9 +65,9 @@ sentence in the new DOM, or stops if that sentence is gone.
 
 ### Options
 
-`mountVoiceOverlay(options)` takes these, and `container` (where the
+`mountContenTTS(options)` takes these, and `container` (where the
 controls go, default `document.body`) and `shortcut` (default `true`).
-`new VoiceOverlay(options)` takes these alone, for apps that make their own
+`new ContenTTS(options)` takes these alone, for apps that make their own
 controls.
 
 | Option | Default | |
@@ -76,7 +76,7 @@ controls.
 | `lang` | the nearest `lang` attribute, else the browser's | The text's language, as in `en-US`. Picks the voice and splits sentences. |
 | `skip` | none | A selector for more to leave unread. |
 | `paragraph` | none | `(element) => value`: groups text into paragraphs other than by layout. Text whose elements give the same value is read as one paragraph, its parts joined with spaces; `undefined` goes by layout. For text the page breaks into lines that should read as prose, such as a diff of a Markdown file. |
-| `storage` | `localStorage`, key `voice-overlay` | `{ load(), save(value) }` for the voice and speed, or `null` to keep them only while the page is open. |
+| `storage` | `localStorage`, key `contentts` | `{ load(), save(value) }` for the voice and speed, or `null` to keep them only while the page is open. |
 | `follow` | `true` | Scroll to what is being read. Scrolling by hand holds the page for a few seconds. |
 | `engine` | `new WebSpeech()` | Where speech comes from (see below). |
 
@@ -101,10 +101,10 @@ voices do.
 
 ### The controls
 
-`<voice-overlay-controls>`, given a reader as its `reader` property. It shows
-while reading, floating at the foot of the window. Add `placement="inline"`
-to have it sit where it is put instead, without a frame, as in a toolbar,
-and `persistent` to show it always. Its Read from selection button moves
+`<contentts-controls>`, given a reader as its `reader` property, is a
+toolbar named Speech Mode. It shows while reading, floating at the foot of
+the window. Add `placement="inline"` to have it sit where it is put instead,
+without a frame, as in a toolbar, and `persistent` to show it always. Its Read from selection button moves
 reading to the selected text; it listens to the page only for
 `selectionchange`, and leaves the selection as it was.
 
@@ -115,7 +115,7 @@ better than Standard, it explains how to get better voices on macOS and
 Windows.
 
 Highlights can be recolored with custom properties on the page:
-`--voice-overlay-sentence`, `--voice-overlay-word` and `--voice-overlay-word-text`.
+`--contentts-sentence`, `--contentts-word` and `--contentts-word-text`.
 
 ## Engines
 

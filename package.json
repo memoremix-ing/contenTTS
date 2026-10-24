@@ -1,12 +1,12 @@
 {
-  "name": "voice-overlay",
+  "name": "contentts",
   "version": "0.1.0",
   "private": true,
   "description": "Reads pages in webviews aloud, highlighting each sentence and word, with the system's voices. Heavily inspired by Read Aloud in Microsoft Edge.",
   "license": "Apache-2.0",
   "type": "module",
   "exports": {
-    ".": "./src/voice-overlay.js",
+    ".": "./src/contentts.js",
     "./voices": "./src/voices.js",
     "./text": "./src/text.js"
   },
