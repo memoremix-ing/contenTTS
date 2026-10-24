@@ -22,11 +22,11 @@ const { reader } = mountContenTTS({ root: document.querySelector("main") });
 
 That adds the controls, which appear while reading, and a shortcut that
 starts, pauses and resumes: ⌘⇧K on a Mac, Ctrl+Shift+K elsewhere (see
-[The shortcut](#the-shortcut)). Give the app a way in too, such as a button
-or a menu item calling `reader.toggle()`. Reading starts from the
+[The shortcuts](#the-shortcuts)). Give the app a way in too, such as a
+button or a menu item calling `reader.toggle()`. Reading starts from the
 selection if there is one, else from the first sentence on screen. To move
-reading elsewhere while it goes on, select some text and press the controls'
-Read from selection button.
+reading elsewhere while it goes on, select some text and press ⌘⌥K
+(Ctrl+Alt+K), or the controls' Read from selection button.
 
 Pages without a bundler can load the files as they are. In an Electrobun app,
 copy `src/` in with the page; nothing else is needed, and it works under a
@@ -66,31 +66,10 @@ sentence in the new DOM, or stops if that sentence is gone.
 ### Options
 
 `mountContenTTS(options)` takes these, and `container` (where the
-controls go, default `document.body`) and `shortcut` (see below).
+controls go, default `document.body`), and `shortcut` and
+`selectionShortcut` (see [The shortcuts](#the-shortcuts)).
 `new ContenTTS(options)` takes these alone, for apps that make their own
 controls.
-
-### The shortcut
-
-`shortcut` is a letter, as in `shortcut: "J"` for ⌘⇧J on a Mac and
-Ctrl+Shift+J elsewhere; `true` (the default) for K; or `false` for none, as
-when an app's menu has the shortcut instead. Anything else throws, so a
-mistyped shortcut fails at once. `mountContenTTS` returns the letter in use
-as `shortcut`.
-
-K is the default as the letter browsers and the OS least use with these
-modifiers. On a Mac, none of Chrome, Edge, Firefox, Safari or macOS's Services
-take ⌘⇧K. Elsewhere, Ctrl+Shift+K is Edge's Duplicate tab and Firefox's Web
-Console, which only matters for pages in a browser: a page in an app's own
-webview has no browser around it. Most other letters are taken more widely:
-J is the developer console, O the bookmarks, and on Linux, GTK keeps
-Ctrl+Shift+U for typing Unicode characters.
-
-`shortcut.js` needs no DOM, so an app's main process can use it for its
-menu: `accelerator(key)` gives `"CommandOrControl+Shift+K"`, as Electrobun
-and Electron take it, and `shortcutLabel(key, mac)` gives `"⌘⇧K"` or
-`"Ctrl+Shift+K"`. `matchesShortcut(event, key, mac)` tells a keydown that is
-the shortcut, matching the letter as the keyboard layout types it.
 
 | Option | Default | |
 | --- | --- | --- |
@@ -102,6 +81,45 @@ the shortcut, matching the letter as the keyboard layout types it.
 | `follow` | `true` | Scroll to what is being read. Scrolling by hand holds the page for a few seconds. |
 | `engine` | `new WebSpeech()` | Where speech comes from (see below). |
 
+### The shortcuts
+
+There are two, each a letter on its own modifiers:
+
+| Option | Mac | Elsewhere | Does |
+| --- | --- | --- | --- |
+| `shortcut` | ⌘⇧K | Ctrl+Shift+K | Starts, pauses and resumes. |
+| `selectionShortcut` | ⌘⌥K | Ctrl+Alt+K | Reads from the selected text: starts there, or moves reading there. With nothing selected it does nothing, and the key is left to the page. |
+
+Each is a letter, as in `shortcut: "J"` for ⌘⇧J and Ctrl+Shift+J; `true`
+(the default) for K; or `false` for none, as when an app's menu has the
+shortcut instead. Anything else throws, so a mistyped shortcut fails at once.
+`mountContenTTS` returns the letters in use as `shortcut` and
+`selectionShortcut`, and the controls show them in their buttons' tooltips.
+
+K is the default as the letter browsers and the OS least use with these
+modifiers. On a Mac, none of Chrome, Edge, Firefox, Safari or macOS's
+Services take ⌘⇧K, and ⌘⌥K is only Firefox's Web Console. Elsewhere,
+Ctrl+Shift+K is Edge's Duplicate tab and Firefox's Web Console, which only
+matters for pages in a browser: a page in an app's own webview has no
+browser around it. Most other letters are taken more widely: J is the
+developer console, O the bookmarks, and on Linux, GTK keeps Ctrl+Shift+U for
+typing Unicode characters.
+
+Ctrl+Alt is also AltGr on Windows, which types characters on many layouts:
+AltGr+K is "ł" on the Hungarian and Croatian ones. So off a Mac, the
+selection shortcut counts only when the key reports the letter K itself, and
+AltGr+K typing "ł" stays typing. For the same reason, give the selection
+shortcut to an app's menu on macOS only: a menu elsewhere would take the key
+before the page could tell.
+
+`shortcut.js` needs no DOM, so an app's main process can use it for its
+menu: `accelerator(key)` gives `"CommandOrControl+Shift+K"` and
+`selectionAccelerator(key)` `"CommandOrControl+Alt+K"`, as Electrobun and
+Electron take them; `shortcutLabel(key, mac)` and
+`selectionShortcutLabel(key, mac)` give `"⌘⇧K"` and `"⌘⌥K"`, or
+`"Ctrl+Shift+K"` and `"Ctrl+Alt+K"`. `matchesShortcut(event, key, mac)` and
+`matchesSelectionShortcut(event, key, mac)` tell a keydown that is one.
+
 ### The reader
 
 `reader.start({ from, within })`, `pause()`, `resume()`, `toggle()`,
@@ -109,7 +127,9 @@ the shortcut, matching the letter as the keyboard layout types it.
 Range or Node) if given, else from the selection, else from the first
 sentence on screen: within `within` (an element, such as the pane last
 used) if given and it has any, else anywhere under `root`. Starting while
-reading moves reading there. `reader.selection` is the text selected under
+reading moves reading there; `reader.readSelection()` does so from the
+selection, if there is one, and says whether there was. `reader.selection`
+is the text selected under
 `root`, as a Range, or `null`.
 
 `reader.state` is `"idle"`, `"starting"`, `"speaking"` or `"paused"`;
@@ -126,9 +146,11 @@ voices do.
 `<contentts-controls>`, given a reader as its `reader` property, is a
 toolbar named Speech Mode. It shows while reading, floating at the foot of
 the window. Add `placement="inline"` to have it sit where it is put instead,
-without a frame, as in a toolbar, and `persistent` to show it always. Its Read from selection button moves
-reading to the selected text; it listens to the page only for
-`selectionchange`, and leaves the selection as it was.
+without a frame, as in a toolbar, and `persistent` to show it always. Its
+Read from selection button moves reading to the selected text; it listens to
+the page only for `selectionchange`, and leaves the selection as it was. Set
+its `shortcuts` property, as `{ toggle: "⌘⇧K", selection: "⌘⌥K" }`, to show
+the keys in the buttons' tooltips (`mountContenTTS` does).
 
 The voice picker lists the voices for a language (English by default, for an
 English page), best first, grouped Premium, Enhanced, Standard, Basic and
