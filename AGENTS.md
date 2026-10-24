@@ -11,8 +11,8 @@
 - **No build step.** Every file in `src/` is served as written, so apps
   without a bundler can copy `src/` in with their page. Keep it plain
   JavaScript modules with relative imports and no dependencies.
-- **`text.js` and `voices.js` need no DOM**, so `node --test` covers them.
-  Keep logic that can be there, there, and test it.
+- **`text.js`, `voices.js` and `shortcut.js` need no DOM**, so `node --test`
+  covers them. Keep logic that can be there, there, and test it.
 - **Never change the page being read.** Highlights go through
   `CSS.highlights`, never through wrapping text in elements: apps re-render
   their pages, and an inserted element would fight that.

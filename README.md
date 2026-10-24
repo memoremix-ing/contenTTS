@@ -3,8 +3,7 @@
 contenTTS reads pages in webviews to you: it highlights each sentence
 and the word being spoken, keeps them on screen, and lets you pause, skip by
 sentence, change the speed, and pick a voice. It is heavily inspired by Read
-Aloud in Microsoft's Edge web browser, whose shortcut it borrows too. It is
-made for apps built with [Electrobun](https://framework.blackboard.sh/electrobun),
+Aloud in Microsoft's Edge web browser. It is made for apps built with [Electrobun](https://framework.blackboard.sh/electrobun),
 but it is plain JavaScript for any page, with no build step and no
 dependencies.
 
@@ -21,9 +20,10 @@ import { mountContenTTS } from "contentts";
 const { reader } = mountContenTTS({ root: document.querySelector("main") });
 ```
 
-That adds the controls, which appear while reading, and Edge's shortcut:
-⌘⇧U on a Mac, Ctrl+Shift+U elsewhere. Give the app a way in too, such as a
-button or a menu item calling `reader.toggle()`. Reading starts from the
+That adds the controls, which appear while reading, and a shortcut that
+starts, pauses and resumes: ⌘⇧K on a Mac, Ctrl+Shift+K elsewhere (see
+[The shortcut](#the-shortcut)). Give the app a way in too, such as a button
+or a menu item calling `reader.toggle()`. Reading starts from the
 selection if there is one, else from the first sentence on screen. To move
 reading elsewhere while it goes on, select some text and press the controls'
 Read from selection button.
@@ -66,9 +66,31 @@ sentence in the new DOM, or stops if that sentence is gone.
 ### Options
 
 `mountContenTTS(options)` takes these, and `container` (where the
-controls go, default `document.body`) and `shortcut` (default `true`).
+controls go, default `document.body`) and `shortcut` (see below).
 `new ContenTTS(options)` takes these alone, for apps that make their own
 controls.
+
+### The shortcut
+
+`shortcut` is a letter, as in `shortcut: "J"` for ⌘⇧J on a Mac and
+Ctrl+Shift+J elsewhere; `true` (the default) for K; or `false` for none, as
+when an app's menu has the shortcut instead. Anything else throws, so a
+mistyped shortcut fails at once. `mountContenTTS` returns the letter in use
+as `shortcut`.
+
+K is the default as the letter browsers and the OS least use with these
+modifiers. On a Mac, none of Chrome, Edge, Firefox, Safari or macOS's Services
+take ⌘⇧K. Elsewhere, Ctrl+Shift+K is Edge's Duplicate tab and Firefox's Web
+Console, which only matters for pages in a browser: a page in an app's own
+webview has no browser around it. Most other letters are taken more widely:
+J is the developer console, O the bookmarks, and on Linux, GTK keeps
+Ctrl+Shift+U for typing Unicode characters.
+
+`shortcut.js` needs no DOM, so an app's main process can use it for its
+menu: `accelerator(key)` gives `"CommandOrControl+Shift+K"`, as Electrobun
+and Electron take it, and `shortcutLabel(key, mac)` gives `"⌘⇧K"` or
+`"Ctrl+Shift+K"`. `matchesShortcut(event, key, mac)` tells a keydown that is
+the shortcut, matching the letter as the keyboard layout types it.
 
 | Option | Default | |
 | --- | --- | --- |
