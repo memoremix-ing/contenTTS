@@ -1,4 +1,4 @@
-# ContenTTS
+# contenTTS
 
 ## Repository workflow
 

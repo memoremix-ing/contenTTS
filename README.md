@@ -1,6 +1,6 @@
-# ContenTTS
+# contenTTS
 
-ContenTTS reads pages in webviews to you: it highlights each sentence
+contenTTS reads pages in webviews to you: it highlights each sentence
 and the word being spoken, keeps them on screen, and lets you pause, skip by
 sentence, change the speed, and pick a voice. It is heavily inspired by Read
 Aloud in Microsoft's Edge web browser, whose shortcut it borrows too. It is
@@ -35,7 +35,7 @@ only from inside the project, so link it in first, as projj does with its
 `web` folder:
 
 ```sh
-ln -s ../../contentts.git/sts-0/src contentts   # in an app at track/<host>/<tenant>/<app>.git/sts-0/
+ln -s ../../contenTTS.git/sts-0/src contentts   # in an app at track/<host>/<tenant>/<app>.git/sts-0/
 ```
 
 ```ts
